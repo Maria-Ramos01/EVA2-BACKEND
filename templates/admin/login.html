@@ -1,0 +1,238 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    /* Variables de la paleta otoñal */
+    :root {
+        --otono-terracota: #c05621;
+        --otono-terracota-hover: #9c4214;
+        --otono-mostaza: #d69e2e;
+        --otono-cafe-oscuro: #2c1d11;
+        --otono-cafe-medio: #744210;
+        --otono-crema-fondo: #fdfbf7;
+        --otono-crema-tarjeta: #fffaf0;
+        --otono-borde: #e2d8ce;
+    }
+
+    /* Ajuste de pantalla completa */
+    html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        background-color: var(--otono-crema-fondo) !important;
+        color: var(--otono-cafe-oscuro) !important;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+
+    /* Ocultar header original del admin */
+    #header, .breadcrumbs {
+        display: none !important;
+    }
+
+    /* Contenedor flexible principal */
+    #container {
+        background: transparent !important;
+        border: none !important;
+        flex: 1 0 auto;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 20px 20px 0 20px !important;
+        margin: 0 auto !important;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    #content {
+        padding: 0 !important;
+        width: 100%;
+        max-width: 420px;
+        margin: auto 0 !important;
+    }
+
+    /* Tarjeta del Formulario */
+    #content-main {
+        background-color: var(--otono-crema-tarjeta);
+        border: 1px solid var(--otono-borde);
+        border-top: 5px solid var(--otono-terracota);
+        border-radius: 8px;
+        box-shadow: 0 8px 20px rgba(44, 29, 17, 0.1);
+        padding: 30px;
+    }
+
+    /* Título del Panel Admin */
+    .admin-title {
+        text-align: center;
+        color: var(--otono-cafe-oscuro);
+        font-size: 1.6rem;
+        font-weight: 700;
+        margin-bottom: 25px;
+    }
+
+    .admin-title span {
+        color: var(--otono-terracota);
+    }
+
+    /* Campos de Entrada */
+    .form-row {
+        padding: 10px 0 !important;
+        border-bottom: none !important;
+    }
+
+    .form-row label {
+        color: var(--otono-cafe-medio) !important;
+        font-weight: 600 !important;
+        font-size: 0.9rem;
+        margin-bottom: 5px;
+        display: block;
+    }
+
+    .form-row input[type="text"], 
+    .form-row input[type="password"] {
+        width: 100% !important;
+        padding: 10px 12px !important;
+        border: 1px solid var(--otono-borde) !important;
+        border-radius: 6px !important;
+        box-sizing: border-box;
+        background-color: #ffffff !important;
+        font-size: 0.95rem;
+        color: var(--otono-cafe-oscuro) !important;
+        transition: border-color 0.2s ease;
+    }
+
+    .form-row input[type="text"]:focus, 
+    .form-row input[type="password"]:focus {
+        border-color: var(--otono-terracota) !important;
+        outline: none !important;
+        box-shadow: 0 0 0 3px rgba(192, 86, 33, 0.15) !important;
+    }
+
+    /* Botón de Iniciar Sesión */
+    .submit-row {
+        padding: 15px 0 0 0 !important;
+        margin: 0 !important;
+        background: transparent !important;
+        border: none !important;
+        text-align: center;
+    }
+
+    .submit-row input[type="submit"] {
+        background-color: var(--otono-terracota) !important;
+        color: #ffffff !important;
+        width: 100%;
+        padding: 12px !important;
+        border: none !important;
+        border-radius: 6px !important;
+        font-size: 1rem !important;
+        font-weight: 600 !important;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+    .submit-row input[type="submit"]:hover {
+        background-color: var(--otono-terracota-hover) !important;
+    }
+
+    /* Alertas y Errores */
+    .errornote {
+        background-color: #fff5f5 !important;
+        color: #c53030 !important;
+        border: 1px solid #feb2b2 !important;
+        border-radius: 6px;
+        padding: 10px 15px !important;
+        font-size: 0.85rem;
+        margin-bottom: 20px !important;
+    }
+
+    /* Pie de Página para Admin Ocupando Todo el Ancho */
+    #footer, .footer-admin-otono {
+        background-color: var(--otono-cafe-oscuro) !important;
+        color: #e2e8f0 !important;
+        text-align: center !important;
+        padding: 15px 10px !important;
+        width: 100% !important;
+        font-size: 0.85rem !important;
+        border-top: 3px solid var(--otono-terracota) !important;
+        margin-top: auto !important;
+        box-sizing: border-box !important;
+        flex-shrink: 0;
+    }
+
+    .footer-admin-otono strong {
+        color: var(--otono-mostaza) !important;
+    }
+</style>
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} login{% endblock %}
+
+{% block usertools %}{% endblock %}
+
+{% block nav-global %}{% endblock %}
+
+{% block nav-sidebar %}{% endblock %}
+
+{% block content_title %}{% endblock %}
+
+{% block breadcrumbs %}{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <div class="admin-title">
+        🍁 Farmacia Salud <span>Admin</span>
+    </div>
+
+    {% if form.errors and not form.non_field_errors %}
+    <p class="errornote">
+        {% if form.errors.items|length == 1 %}
+            {% translate "Por favor corrige el error a continuación." %}
+        {% else %}
+            {% translate "Por favor corrige los errores a continuación." %}
+        {% endif %}
+    </p>
+    {% endif %}
+
+    {% if form.non_field_errors %}
+    {% for error in form.non_field_errors %}
+    <p class="errornote">
+        {{ error }}
+    </p>
+    {% endfor %}
+    {% endif %}
+
+    <form action="{{ app_path }}" method="post" id="login-form">{% csrf_token %}
+        <div class="form-row">
+            {{ form.username.errors }}
+            <label for="id_username" class="required">Usuario:</label>
+            {{ form.username }}
+        </div>
+        <div class="form-row">
+            {{ form.password.errors }}
+            <label for="id_password" class="required">Contraseña:</label>
+            {{ form.password }}
+            <input type="hidden" name="next" value="{{ next }}">
+        </div>
+
+        <div class="submit-row">
+            <input type="submit" value="Acceder al Panel Admin">
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block footer %}
+<div class="footer-admin-otono">
+    <p style="margin: 0; text-align: center;">
+        Desarrollado por: <strong>Maria Fernanda Ramos</strong> | Sección: <strong>AP-N4-C2(E-F)</strong> | Año: <strong>2026</strong>
+    </p>
+</div>
+{% endblock %}

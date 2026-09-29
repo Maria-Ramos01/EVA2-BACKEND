@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2 class="mb-4">Catálogo de Insumos Médicos</h2>
+<div class="row">
+    {% for insumo in insumos %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title text-primary">{{ insumo.nombre_comercial }}</h5>
+                <h6 class="card-subtitle mb-2 text-muted">{{ insumo.principio_activo }}</h6>
+                <p class="card-text mb-1"><strong>Lote:</strong> {{ insumo.lote }}</p>
+                <p class="card-text mb-1"><strong>Precio / Caja:</strong> ${{ insumo.precio_caja }}</p>
+                <p class="card-text">
+                    <strong>Stock Disponible:</strong> 
+                    <span class="badge {% if insumo.stock > 0 %}bg-success{% else %}bg-danger{% endif %}">
+                        {{ insumo.stock }} unidades
+                    </span>
+                </p>
+            </div>
+            <div class="card-footer bg-transparent border-top-0">
+                {% if user.is_authenticated %}
+                    {% if insumo.stock > 0 %}
+                        <a href="{% url 'agregar_al_carro' insumo.id %}" class="btn btn-outline-primary w-100">Agregar al Carro</a>
+                    {% else %}
+                        <button class="btn btn-secondary w-100" disabled>Sin Stock</button>
+                    {% endif %}
+                {% else %}
+                    <a href="{% url 'login' %}" class="btn btn-outline-secondary w-100">Inicia sesión para comprar</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <p>No hay insumos disponibles en el sistema.</p>
+    {% endfor %}
+</div>
+{% endblock %}

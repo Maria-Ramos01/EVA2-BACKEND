@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Mi Carro de Compras</h2>
+
+{% if items %}
+<div class="table-responsive mt-3">
+    <table class="table table-bordered align-middle">
+        <thead class="table-primary">
+            <tr>
+                <th>Insumo</th>
+                <th>Precio Unitario</th>
+                <th>Cantidad (Cajas)</th>
+                <th>Subtotal</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>{{ item.insumo.nombre_comercial }}</td>
+                <td>${{ item.insumo.precio_caja }}</td>
+                <td>{{ item.cantidad_cajas }}</td>
+                <td>${% widthratio item.insumo.precio_caja 1 item.cantidad_cajas %}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mt-4">
+    <h4>Total a Pagar: <span class="text-success">${{ total }}</span></h4>
+    <form action="{% url 'procesar_pago' %}" method="POST">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-success btn-lg">Pagar y Confirmar Pedido</button>
+    </form>
+</div>
+{% else %}
+<div class="alert alert-info mt-3">
+    Tu carro de compras está vacío. <a href="{% url 'catalogo' %}">Volver al catálogo</a>
+</div>
+{% endif %}
+{% endblock %}

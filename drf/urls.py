@@ -18,6 +18,10 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from Farmacia_Salud.views import (
+    catalogo_view, login_view, logout_view, registro_view,
+    agregar_al_carro, ver_carro, procesar_pago
+)
 
 from Farmacia_Salud.views import (
     CustomTokenObtainPairView, InsumoViewSet, CarroViewSet, SolicitudViewSet
@@ -41,4 +45,12 @@ urlpatterns = [
     # Swagger / OpenAPI Docs
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+
+    path('', catalogo_view, name='catalogo'),
+    path('login/', login_view, name='login'),
+    path('logout/', logout_view, name='logout'),
+    path('registro/', registro_view, name='registro'),
+    path('carro/', ver_carro, name='ver_carro'),
+    path('carro/agregar/<int:insumo_id>/', agregar_al_carro, name='agregar_al_carro'),
+    path('carro/pagar/', procesar_pago, name='procesar_pago'),
 ]

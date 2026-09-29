@@ -1,14 +1,24 @@
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.db import transaction
+
+# Rest Framework y JWT
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework_simplejwt.views import TokenObtainPairView
-from .models import Insumo, CarroInsumos, CarroItem, SolicitudAbastecimiento, SolicitudItem
+from rest_framework_simplejwt.views import TokenObtainPairView  # <-- ¡ESTA LÍNEA FALTABA!
+
+# Formularios
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+
+# Modelos y Serializadores
+from .models import Insumo, CarroInsumos, CarroItem, SolicitudAbastecimiento, SolicitudItem, Usuario
 from .serializers import (
     CustomTokenObtainPairSerializer, InsumoSerializer, 
     CarroInsumosSerializer, CarroItemSerializer, SolicitudAbastecimientoSerializer
 )
-
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
@@ -114,3 +124,106 @@ class SolicitudViewSet(viewsets.ModelViewSet):
             solicitud.save()
 
         return Response({"mensaje": f"Estado actualizado a {nuevo_estado}"})
+
+# Registro de Usuario
+def registro_view(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            messages.success(request, "¡Registro exitoso! Bienvenido a Farmacia Salud.")
+            return redirect('catalogo')
+    else:
+        form = UserCreationForm()
+    return render(request, 'registro.html', {'form': form})
+
+# Inicio de Sesión
+def login_view(request):
+    if request.method == 'POST':
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            login(request, user)
+            return redirect('catalogo')
+        else:
+            messages.error(request, "Usuario o contraseña incorrectos.")
+    else:
+        form = AuthenticationForm()
+    return render(request, 'login.html', {'form': form})
+
+# Cerrar Sesión
+def logout_view(request):
+    logout(request)
+    return redirect('login')
+
+# Catálogo de Productos
+def catalogo_view(request):
+    insumos = Insumo.objects.all()
+    return render(request, 'catalogo.html', {'insumos': insumos})
+
+# Agregar al Carro
+@login_required
+def agregar_al_carro(request, insumo_id):
+    insumo = get_object_or_404(Insumo, id=insumo_id)
+    carro, _ = CarroInsumos.objects.get_or_create(usuario=request.user)
+    
+    item, created = CarroItem.objects.get_or_create(carro=carro, insumo=insumo)
+    if not created:
+        item.cantidad_cajas += 1
+    item.save()
+    
+    messages.success(request, f"{insumo.nombre_comercial} añadido al carro.")
+    return redirect('catalogo')
+
+# Ver Carro de Compras
+@login_required
+def ver_carro(request):
+    carro, _ = CarroInsumos.objects.get_or_create(usuario=request.user)
+    items = carro.items.all()
+    
+    total = sum(item.insumo.precio_caja * item.cantidad_cajas for item in items)
+    return render(request, 'carro.html', {'items': items, 'total': total})
+
+# Procesar Pago y Descontar Stock
+@login_required
+def procesar_pago(request):
+    carro = get_object_or_404(CarroInsumos, usuario=request.user)
+    items = carro.items.all()
+    
+    if not items.exists():
+        messages.error(request, "Tu carro está vacío.")
+        return redirect('ver_carro')
+    
+    with transaction.atomic():
+        # 1. Validar Stock suficiente para todos los ítems antes de procesar
+        for item in items:
+            if item.insumo.stock < item.cantidad_cajas:
+                messages.error(request, f"Stock insuficiente para {item.insumo.nombre_comercial}. Disponible: {item.insumo.stock}")
+                return redirect('ver_carro')
+        
+        # 2. Crear la Solicitud / Orden de Compra en estado PAGADO
+        total_orden = sum(item.insumo.precio_caja * item.cantidad_cajas for item in items)
+        solicitud = SolicitudAbastecimiento.objects.create(
+            usuario=request.user,
+            estado='PAGADO',
+            total=total_orden
+        )
+        
+        # 3. Descontar Stock de los productos en PostgreSQL
+        for item in items:
+            SolicitudItem.objects.create(
+                solicitud=solicitud,
+                insumo=item.insumo,
+                cantidad_cajas=item.cantidad_cajas,
+                precio_historico=item.insumo.precio_caja
+            )
+            # Descuento de stock
+            item.insumo.stock -= item.cantidad_cajas
+            item.insumo.save()
+            
+        # 4. Vaciar el carro persistente
+        items.delete()
+        
+    messages.success(request, f"¡Pago exitoso! Se ha generado tu pedido #{solicitud.id} y el stock fue actualizado.")
+    return redirect('catalogo')

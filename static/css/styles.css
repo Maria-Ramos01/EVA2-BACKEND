@@ -1,0 +1,113 @@
+/* Paleta de Colores Otoñales */
+:root {
+    --otono-terracota: #c05621;
+    --otono-terracota-hover: #9c4214;
+    --otono-mostaza: #d69e2e;
+    --otono-cafe-oscuro: #2c1d11;
+    --otono-cafe-medio: #744210;
+    --otono-crema-fondo: #fdfbf7;
+    --otono-crema-tarjeta: #fffaf0;
+    --otono-verde-bosque: #2f855a;
+    --otono-rojo-hoja: #9b2c2c;
+    --otono-borde: #e2d8ce;
+}
+
+body {
+    background-color: var(--otono-crema-fondo);
+    color: var(--otono-cafe-oscuro);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Navbar Estilo Otoñal */
+.navbar-otono {
+    background-color: var(--otono-cafe-oscuro) !important;
+    border-bottom: 3px solid var(--otono-mostaza);
+}
+
+.navbar-otono .navbar-brand {
+    color: var(--otono-mostaza) !important;
+    font-size: 1.4rem;
+}
+
+.navbar-otono .nav-link {
+    color: #f7fafc !important;
+    transition: color 0.2s ease;
+}
+
+.navbar-otono .nav-link:hover {
+    color: var(--otono-mostaza) !important;
+}
+
+/* Botones Personalizados */
+.btn-otono-primary {
+    background-color: var(--otono-terracota);
+    color: #ffffff;
+    border: none;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-otono-primary:hover {
+    background-color: var(--otono-terracota-hover);
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
+.btn-otono-success {
+    background-color: var(--otono-verde-bosque);
+    color: #ffffff;
+    border: none;
+}
+
+.btn-otono-success:hover {
+    background-color: #22543d;
+    color: #ffffff;
+}
+
+/* Tarjetas del Catálogo */
+.card-otono {
+    background-color: var(--otono-crema-tarjeta);
+    border: 1px solid var(--otono-borde);
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.04);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-otono:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 15px rgba(116, 66, 16, 0.12);
+}
+
+.card-otono .card-title {
+    color: var(--otono-cafe-medio);
+}
+
+/* Tablas */
+.table-otono {
+    background-color: #ffffff;
+    border-color: var(--otono-borde);
+}
+
+.table-otono thead {
+    background-color: var(--otono-terracota);
+    color: #ffffff;
+}
+
+/* Badges de Stock */
+.badge-stock-ok {
+    background-color: var(--otono-verde-bosque);
+}
+
+.badge-stock-low {
+    background-color: var(--otono-rojo-hoja);
+}
+
+/* Footer Otoñal */
+.footer-otono {
+    background-color: var(--otono-cafe-oscuro);
+    color: #e2e8f0;
+    border-top: 3px solid var(--otono-terracota);
+}
+
+.footer-otono strong {
+    color: var(--otono-mostaza);
+}
