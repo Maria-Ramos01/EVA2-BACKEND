@@ -32,14 +32,16 @@ class CarroInsumosSerializer(serializers.ModelSerializer):
 
 class SolicitudItemSerializer(serializers.ModelSerializer):
     insumo_nombre = serializers.ReadOnlyField(source='insumo.nombre_comercial')
+    subtotal = serializers.ReadOnlyField()
 
     class Meta:
         model = SolicitudItem
-        fields = ['id', 'insumo', 'insumo_nombre', 'cantidad_cajas', 'precio_historico']
+        fields = ['id', 'insumo', 'insumo_nombre', 'cantidad_cajas', 'precio_unitario', 'subtotal']
 
 class SolicitudAbastecimientoSerializer(serializers.ModelSerializer):
     items = SolicitudItemSerializer(many=True, read_only=True)
 
     class Meta:
         model = SolicitudAbastecimiento
-        fields = ['id', 'usuario', 'estado', 'total', 'creado_en', 'items']
+        fields = ['id', 'institucion', 'fecha_creacion', 'estado', 'total', 'items']
+        read_only_fields = ['institucion', 'estado', 'total']

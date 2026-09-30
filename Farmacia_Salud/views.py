@@ -5,16 +5,18 @@ from django.contrib import messages
 from django.db import transaction
 
 # Rest Framework y JWT
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, permissions, status, views
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework_simplejwt.views import TokenObtainPairView  # <-- ¡ESTA LÍNEA FALTABA!
+from rest_framework_simplejwt.views import TokenObtainPairView  
+from rest_framework.permissions import IsAuthenticated
 
 # Formularios
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from .forms import RegistroUsuarioForm
 
 # Modelos y Serializadores
-from .models import Insumo, CarroInsumos, CarroItem, SolicitudAbastecimiento, SolicitudItem, Usuario
+from .models import Insumo, CarroInsumos, CarroItem, SolicitudAbastecimiento, SolicitudItem, Usuario, Categoria
 from .serializers import (
     CustomTokenObtainPairSerializer, InsumoSerializer, 
     CarroInsumosSerializer, CarroItemSerializer, SolicitudAbastecimientoSerializer
@@ -125,17 +127,84 @@ class SolicitudViewSet(viewsets.ModelViewSet):
 
         return Response({"mensaje": f"Estado actualizado a {nuevo_estado}"})
 
+class ProcesarPagoSolicitudAPIView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    @transaction.atomic
+    def post(self, request, pk):
+        solicitud = get_object_or_404(SolicitudAbastecimiento, pk=pk, institucion=request.user)
+
+        if solicitud.estado != 'PENDIENTE':
+            return Response(
+                {"error": "La solicitud ya ha sido procesada o cancelada previamente."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # 1. Validar Stock Físico en Bodega para cada ítem
+        for item in solicitud.items.all():
+            if item.insumo.stock < item.cantidad_cajas:
+                return Response(
+                    {
+                        "error": f"Stock insuficiente en bodega para '{item.insumo.nombre_comercial}'. "
+                                 f"Requerido: {item.cantidad_cajas} cajas, Disponible: {item.insumo.stock} cajas."
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        # 2. Descontar stock de bodega y cambiar estado a PAGADO
+        for item in solicitud.items.all():
+            insumo = item.insumo
+            insumo.stock -= item.cantidad_cajas
+            insumo.save()
+
+        solicitud.estado = 'PAGADO'
+        solicitud.save()
+
+        return Response(
+            {"mensaje": "Pago procesado exitosamente. Orden en estado PAGADO y stock actualizado en bodega.", "solicitud_id": solicitud.id},
+            status=status.HTTP_200_OK
+        )
+
+
+class ActualizarEstadoGestorAPIView(views.APIView):
+    permission_classes = [IsAuthenticated]  # Requiere rol de Gestor/Admin
+
+    @transaction.atomic
+    def patch(self, request, pk):
+        solicitud = get_object_or_404(SolicitudAbastecimiento, pk=pk)
+        nuevo_estado = request.data.get('estado')
+
+        if nuevo_estado not in ['ENTREGADO', 'CANCELADO']:
+            return Response({"error": "Estado no válido. Use 'ENTREGADO' o 'CANCELADO'."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Transición: ENTREGADO
+        if nuevo_estado == 'ENTREGADO':
+            solicitud.estado = 'ENTREGADO'
+            solicitud.save()
+            return Response({"mensaje": "Orden finalizada y entregada con éxito."})
+
+        # Transición: CANCELADO (Reincorporar stock a bodega)
+        if nuevo_estado == 'CANCELADO':
+            if solicitud.estado == 'PAGADO':
+                for item in solicitud.items.all():
+                    insumo = item.insumo
+                    insumo.stock += item.cantidad_cajas
+                    insumo.save()
+
+            solicitud.estado = 'CANCELADO'
+            solicitud.save()
+            return Response({"mensaje": "Orden cancelada. Existencias reincorporadas al inventario de bodega."})
+
 # Registro de Usuario
 def registro_view(request):
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = RegistroUsuarioForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            login(request, user)
-            messages.success(request, "¡Registro exitoso! Bienvenido a Farmacia Salud.")
-            return redirect('catalogo')
+            form.save()
+            return redirect('login')  # O a la ruta que tengas definida tras registrarse
     else:
-        form = UserCreationForm()
+        form = RegistroUsuarioForm()
+
     return render(request, 'registro.html', {'form': form})
 
 # Inicio de Sesión
@@ -158,12 +227,19 @@ def logout_view(request):
     return redirect('login')
 
 # Catálogo de Productos
+# Vista del catálogo
 def catalogo_view(request):
-    insumos = Insumo.objects.all()
-    return render(request, 'catalogo.html', {'insumos': insumos})
+    # Obtener todas las categorías e insumos activos
+    categorias = Categoria.objects.all()
+    insumos = Insumo.objects.select_related('categoria').all()
+    
+    context = {
+        'categorias': categorias,
+        'insumos': insumos,
+    }
+    return render(request, 'catalogo.html', context)
 
 # Agregar al Carro
-@login_required
 def agregar_al_carro(request, insumo_id):
     insumo = get_object_or_404(Insumo, id=insumo_id)
     carro, _ = CarroInsumos.objects.get_or_create(usuario=request.user)
@@ -177,16 +253,46 @@ def agregar_al_carro(request, insumo_id):
     return redirect('catalogo')
 
 # Ver Carro de Compras
-@login_required
 def ver_carro(request):
-    carro, _ = CarroInsumos.objects.get_or_create(usuario=request.user)
-    items = carro.items.all()
-    
-    total = sum(item.insumo.precio_caja * item.cantidad_cajas for item in items)
-    return render(request, 'carro.html', {'items': items, 'total': total})
+    items_carro = []
+    total = 0
+
+    if request.user.is_authenticated:
+        # 1. Usuario Autenticado: Usamos el modelo CarroInsumos en BD
+        carro, _ = CarroInsumos.objects.get_or_create(usuario=request.user)
+        # Suponiendo que tu modelo CarroInsumos tiene una relación de ítems (ajusta 'items' si se llama distinto)
+        if hasattr(carro, 'items'):
+            for item in carro.items.all():
+                subtotal = item.insumo.precio_unitario * item.cantidad
+                total += subtotal
+                items_carro.append({
+                    'insumo': item.insumo,
+                    'cantidad': item.cantidad,
+                    'subtotal': subtotal
+                })
+    else:
+        # 2. Usuario Anónimo: Usamos la Sesión HTTP (sin requerir ID en la BD)
+        session_carro = request.session.get('carro', {})
+        for insumo_id, cantidad in session_carro.items():
+            try:
+                insumo = Insumo.objects.get(id=insumo_id)
+                subtotal = insumo.precio_unitario * cantidad
+                total += subtotal
+                items_carro.append({
+                    'insumo': insumo,
+                    'cantidad': cantidad,
+                    'subtotal': subtotal
+                })
+            except Insumo.DoesNotExist:
+                continue
+
+    context = {
+        'items_carro': items_carro,
+        'total': total,
+    }
+    return render(request, 'carro.html', context)
 
 # Procesar Pago y Descontar Stock
-@login_required
 def procesar_pago(request):
     carro = get_object_or_404(CarroInsumos, usuario=request.user)
     items = carro.items.all()

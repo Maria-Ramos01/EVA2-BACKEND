@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.conf import settings
+
 
 # 1. Modelo de Usuario con Roles
 class Usuario(AbstractUser):

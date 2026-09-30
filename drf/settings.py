@@ -95,10 +95,19 @@ WSGI_APPLICATION = 'drf.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'postgres',
+        'USER': 'postgres.qbflijgjavinfswgyron',
+        'PASSWORD': 'timonlimon01',
+        'HOST': 'aws-0-us-east-1.pooler.supabase.com',
+        'PORT': '5432',
     }
 }
+# Connect to Postgres via the shared transaction-mode pooler (IPv4-only)
+DATABASE_URL="postgresql://postgres.qbflijgjavinfswgyron:[YOUR-PASSWORD]@aws-0-us-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
+
+# Connect to Postgres via the shared session-mode pooler (used for migrations)
+DIRECT_URL="postgresql://postgres.qbflijgjavinfswgyron:[YOUR-PASSWORD]@aws-0-us-east-1.pooler.supabase.com:5432/postgres"
 
 # Configuración de Modelo de Usuario Personalizado
 AUTH_USER_MODEL = 'Farmacia_Salud.Usuario'
@@ -163,3 +172,8 @@ SPECTACULAR_SETTINGS = {
     'DESCRIPTION': 'Documentación de la API de gestión de inventario, carros persistentes y solicitudes.',
     'VERSION': '1.0.0',
 }
+
+# Al iniciar sesión, redirige al catálogo de productos (en vez de /accounts/profile/ o /admin/)
+LOGIN_REDIRECT_URL = 'catalogo'
+LOGOUT_REDIRECT_URL = 'catalogo'
+LOGIN_URL = 'login'

@@ -14,10 +14,12 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
+from django.contrib.auth.views import LoginView, LogoutView
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from Farmacia_Salud.views import ProcesarPagoSolicitudAPIView, ActualizarEstadoGestorAPIView
 from Farmacia_Salud.views import (
     catalogo_view, login_view, logout_view, registro_view,
     agregar_al_carro, ver_carro, procesar_pago
@@ -46,11 +48,17 @@ urlpatterns = [
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
 
+    # Vista principal del Catálogo
     path('', catalogo_view, name='catalogo'),
-    path('login/', login_view, name='login'),
-    path('logout/', logout_view, name='logout'),
+    # Ruta del Login Propio
+    path('login/', LoginView.as_view(template_name='login.html'), name='login'),
+    # Ruta de Cierre de Sesión (Redirige al catálogo)
+    path('logout/', LogoutView.as_view(next_page='catalogo'), name='logout'),
+    # Registro de usuarios
     path('registro/', registro_view, name='registro'),
     path('carro/', ver_carro, name='ver_carro'),
     path('carro/agregar/<int:insumo_id>/', agregar_al_carro, name='agregar_al_carro'),
     path('carro/pagar/', procesar_pago, name='procesar_pago'),
+    path('api/solicitud/<int:pk>/pagar/', ProcesarPagoSolicitudAPIView.as_view(), name='api_pagar_solicitud'),
+    path('api/solicitud/<int:pk>/cambiar-estado/', ActualizarEstadoGestorAPIView.as_view(), name='api_cambiar_estado'),
 ]
