@@ -1,18 +1,180 @@
-{% extends 'base.html' %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - Farmacia Salud B2B</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-body: #f8f6f0;
+            --navbar-bg: #271f18;
+            --navbar-gold: #e6a100;
+            --card-bg: #ffffff;
+            --border-color: #e0e0e0;
+            --primary-blue: #007bff;
+            --otono-terracota: #c05621;
+            --otono-terracota-hover: #9c4214;
+        }
 
-{% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-4">
-        <div class="card shadow">
-            <div class="card-body">
-                <h3 class="card-title text-center mb-4">Iniciar Sesión</h3>
-                <form method="POST">
-                    {% csrf_token %}
-                    {{ form.as_p }}
-                    <button type="submit" class="btn btn-primary w-100">Ingresar</button>
-                </form>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background-color: var(--bg-body);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background-color: var(--navbar-bg);
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar-brand {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: var(--navbar-gold);
+            text-decoration: none;
+        }
+
+        .login-container {
+            max-width: 420px;
+            width: 100%;
+            margin: auto;
+            padding: 30px;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .login-header h2 {
+            margin: 10px 0 5px 0;
+            color: #222;
+        }
+
+        .login-header p {
+            color: #666;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+            color: #333;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 0.95rem;
+            box-sizing: border-box;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--otono-terracota);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--otono-terracota);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-submit:hover {
+            background-color: var(--otono-terracota-hover);
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            border: 1px solid #f5c6cb;
+        }
+
+        .login-footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+
+        .login-footer a {
+            color: var(--otono-terracota);
+            text-decoration: none;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="{% url 'catalogo' %}" class="navbar-brand">
+            <i class="fa-solid fa-maple-leaf"></i> Farmacia Salud
+        </a>
+    </nav>
+
+    <div class="login-container">
+        <div class="login-header">
+            <i class="fa-solid fa-user-circle fa-3x" style="color: var(--otono-terracota);"></i>
+            <h2>Acceso a la Plataforma</h2>
+            <p>Ingresa tus credenciales para gestionar solicitudes</p>
+        </div>
+
+        {% if form.errors %}
+            <div class="alert-error">
+                Usuario o contraseña incorrectos. Por favor, intenta de nuevo.
             </div>
+        {% endif %}
+
+        <form method="post" action="{% url 'login' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="id_username">Nombre de usuario</label>
+                <input type="text" name="username" id="id_username" class="form-control" required autofocus>
+            </div>
+
+            <div class="form-group">
+                <label for="id_password">Contraseña</label>
+                <input type="password" name="password" id="id_password" class="form-control" required>
+            </div>
+
+            <button type="submit" class="btn-submit">Iniciar Sesión</button>
+        </form>
+
+        <div class="login-footer">
+            ¿No tienes cuenta? <a href="{% url 'registro' %}">Regístrate aquí</a>
         </div>
     </div>
-</div>
-{% endblock %}
+
+</body>
+</html>

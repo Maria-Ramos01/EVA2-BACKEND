@@ -1,38 +1,327 @@
-{% extends 'base.html' %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo de Insumos Médicos - Farmacia Salud</title>
+    <!-- FontAwesome para íconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-body: #f8f6f0;
+            --navbar-bg: #271f18;
+            --navbar-gold: #e6a100;
+            --card-bg: #ffffff;
+            --border-color: #e0e0e0;
+            --primary-blue: #007bff;
+            --badge-green: #28a745;
+            --text-dark: #333333;
+            --text-muted: #666666;
+            --gold-active: #d69e2e;
+        }
 
-{% block content %}
-<h2 class="mb-4">Catálogo de Insumos Médicos</h2>
-<div class="row">
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Navbar estilo oscuro */
+        .navbar {
+            background-color: var(--navbar-bg);
+            color: white;
+            padding: 14px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: var(--navbar-gold);
+            text-decoration: none;
+        }
+
+        .navbar-user {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            font-size: 0.95rem;
+        }
+
+        .btn-cart {
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 6px 14px;
+            border-radius: 20px;
+            transition: background 0.2s;
+            font-weight: 500;
+        }
+
+        .btn-cart:hover {
+            background: rgba(255, 255, 255, 0.25);
+            color: var(--navbar-gold);
+        }
+
+        .cart-badge {
+            background-color: var(--navbar-gold);
+            color: var(--navbar-bg);
+            font-weight: bold;
+            font-size: 0.8rem;
+            padding: 2px 7px;
+            border-radius: 10px;
+        }
+
+        .btn-auth {
+            background: transparent;
+            border: 1px solid white;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: all 0.2s;
+            display: inline-block;
+        }
+
+        .btn-auth:hover {
+            background: white;
+            color: var(--navbar-bg);
+            font-weight: 600;
+        }
+
+        /* Contenedor Principal */
+        .container {
+            max-width: 1250px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .page-header {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #222;
+            margin-bottom: 20px;
+        }
+
+        /* Barra de Filtros por Categoría */
+        .filter-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            background-color: #ffffff;
+            border: 1px solid var(--border-color);
+            color: var(--text-dark);
+            padding: 8px 18px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--primary-blue);
+            color: var(--primary-blue);
+        }
+
+        .filter-btn.active {
+            background-color: var(--gold-active);
+            color: white;
+            border-color: var(--gold-active);
+        }
+
+        /* Grid de Productos */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        @media (max-width: 992px) {
+            .products-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 600px) {
+            .products-grid { grid-template-columns: 1fr; }
+        }
+
+        /* Tarjeta de Producto */
+        .product-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .product-title {
+            color: var(--primary-blue);
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin: 0 0 4px 0;
+        }
+
+        .product-subtitle {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 12px;
+        }
+
+        .product-detail {
+            font-size: 0.9rem;
+            margin: 4px 0;
+        }
+
+        .product-detail strong {
+            color: #000;
+        }
+
+        .badge-stock {
+            background-color: var(--badge-green);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .btn-add-cart {
+            background-color: transparent;
+            border: 1px solid var(--primary-blue);
+            color: var(--primary-blue);
+            padding: 8px;
+            border-radius: 4px;
+            width: 100%;
+            margin-top: 15px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+
+        .btn-add-cart:hover {
+            background-color: var(--primary-blue);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar con Acceso a Carro y Login -->
+    <nav class="navbar">
+        <a href="{% url 'catalogo' %}" class="navbar-brand">
+            <i class="fa-solid fa-maple-leaf"></i> Farmacia Salud
+        </a>
+        <div class="navbar-user">
+            <!-- Botón directo al Carro de Compras / Solicitud B2B -->
+            <a href="/carro/" class="btn-cart">
+                <i class="fa-solid fa-cart-shopping"></i> Mi Carro
+                <span class="cart-badge" id="cartCount">0</span>
+            </a>
+
+            {% if request.user.is_authenticated %}
+                <span>Hola, <strong>{{ request.user.username }}</strong></span>
+                <form method="post" action="{% url 'logout' %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-auth">Cerrar Sesión</button>
+                </form>
+            {% else %}
+                <!-- Botón directo al Login Propio -->
+                <a href="{% url 'login' %}" class="btn-auth"><i class="fa-solid fa-right-to-bracket me-1"></i> Iniciar Sesión</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <!-- Contenido Principal -->
+    <div class="container">
+        <h1 class="page-header">Catálogo de Insumos Médicos</h1>
+
+        <!-- Filtro por Categorías (Funciona sin requerir sesión) -->
+        <div class="filter-bar">
+            <button class="filter-btn active" onclick="filterCategory('todos', this)">Todos los productos</button>
+            {% for cat in categorias %}
+                <button class="filter-btn" onclick="filterCategory('cat-{{ cat.id }}', this)">{{ cat.nombre }}</button>
+            {% empty %}
+                <button class="filter-btn" onclick="filterCategory('medicamentos', this)">Medicamentos</button>
+                <button class="filter-btn" onclick="filterCategory('quirurgico', this)">Material Quirúrgico</button>
+                <button class="filter-btn" onclick="filterCategory('equipamiento', this)">Equipamiento</button>
+            {% endfor %}
+        </div>
+
+        <!-- Grid de Tarjetas de Productos -->
+<div class="products-grid">
+
     {% for insumo in insumos %}
-    <div class="col-md-4 mb-4">
-        <div class="card h-100 shadow-sm">
-            <div class="card-body">
-                <h5 class="card-title text-primary">{{ insumo.nombre_comercial }}</h5>
-                <h6 class="card-subtitle mb-2 text-muted">{{ insumo.principio_activo }}</h6>
-                <p class="card-text mb-1"><strong>Lote:</strong> {{ insumo.lote }}</p>
-                <p class="card-text mb-1"><strong>Precio / Caja:</strong> ${{ insumo.precio_caja }}</p>
-                <p class="card-text">
-                    <strong>Stock Disponible:</strong> 
-                    <span class="badge {% if insumo.stock > 0 %}bg-success{% else %}bg-danger{% endif %}">
-                        {{ insumo.stock }} unidades
-                    </span>
-                </p>
+    <div class="product-card" data-category="cat-{{ insumo.categoria.id }}">
+        <div>
+            <h3 class="product-title">{{ insumo.nombre_comercial }}</h3>
+            <div class="product-subtitle">{{ insumo.categoria.nombre }}</div>
+            <div class="product-detail"><strong>Lote:</strong> {{ insumo.lote }}</div>
+            
+            <!-- Precio dinamico obtenido del modelo Insumo -->
+            <div class="product-detail">
+                <strong>Precio / Caja:</strong> ${{ insumo.precio_caja|floatformat:0 }}
             </div>
-            <div class="card-footer bg-transparent border-top-0">
-                {% if user.is_authenticated %}
-                    {% if insumo.stock > 0 %}
-                        <a href="{% url 'agregar_al_carro' insumo.id %}" class="btn btn-outline-primary w-100">Agregar al Carro</a>
-                    {% else %}
-                        <button class="btn btn-secondary w-100" disabled>Sin Stock</button>
-                    {% endif %}
-                {% else %}
-                    <a href="{% url 'login' %}" class="btn btn-outline-secondary w-100">Inicia sesión para comprar</a>
-                {% endif %}
+            
+            <div class="product-detail">
+                <strong>Stock Disponible:</strong> <span class="badge-stock">{{ insumo.stock }} unidades</span>
             </div>
         </div>
+        <button class="btn-add-cart" onclick="addToCart('{{ insumo.id }}')">Agregar al Carro</button>
     </div>
     {% empty %}
-    <p>No hay insumos disponibles en el sistema.</p>
+    <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #666;">
+        <i class="fa-solid fa-box-open fa-2x"></i>
+        <p>No hay insumos registrados en la base de datos.</p>
+    </div>
     {% endfor %}
+
 </div>
-{% endblock %}
+
+    <!-- Script de interacción -->
+    <script>
+        let cartItemsCount = 0;
+
+        function filterCategory(categorySlug, button) {
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+
+            const products = document.querySelectorAll('.product-card');
+            products.forEach(product => {
+                const productCat = product.getAttribute('data-category');
+                if (categorySlug === 'todos' || productCat === categorySlug || productCat.includes(categorySlug)) {
+                    product.style.display = 'flex';
+                } else {
+                    product.style.display = 'none';
+                }
+            });
+        }
+
+        function addToCart(productName) {
+            cartItemsCount++;
+            document.getElementById('cartCount').innerText = cartItemsCount;
+        }
+    </script>
+</body>
+</html>
