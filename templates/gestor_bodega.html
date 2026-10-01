@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestor de Bodega - Control de Inventario</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: sans-serif; background: #222; color: white; margin: 0; }
+        .header { background: #111; padding: 15px 30px; border-bottom: 2px solid #c05621; }
+        .container { max-width: 1100px; margin: 30px auto; padding: 0 20px; }
+        table { width: 100%; border-collapse: collapse; background: #333; margin-top: 20px; }
+        th, td { padding: 12px; border: 1px solid #444; text-align: left; }
+        th { background: #444; }
+        select { padding: 5px; border-radius: 4px; }
+        .btn-update { background: #c05621; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2><i class="fa-solid fa-warehouse"></i> Panel de Control - Gestor de Bodega</h2>
+    </div>
+    <div class="container">
+        <h3>Gestión de Estados de Solicitudes (PATCH /api/solicitudes/{id}/estado/)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID Solicitud</th>
+                    <th>Cliente / Institución</th>
+                    <th>Total</th>
+                    <th>Estado Actual</th>
+                    <th>Cambiar Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for solicitud in solicitudes %}
+                <tr>
+                    <td>#{{ solicitud.id }}</td>
+                    <td>{{ solicitud.cliente_nombre|default:solicitud.usuario.username }}</td>
+                    <td>${{ solicitud.total|floatformat:0 }}</td>
+                    <td><strong>{{ solicitud.estado }}</strong></td>
+                    <td>
+                        <form method="post" action="{% url 'actualizar_estado' solicitud.id %}">
+                            {% csrf_token %}
+                            <select name="nuevo_estado">
+                                <option value="PAID">Pagado / En Preparación</option>
+                                <option value="DESPACHADO">Despachado</option>
+                                <option value="CANCELLED">Cancelado</option>
+                            </select>
+                            <button type="submit" class="btn-update">Actualizar</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

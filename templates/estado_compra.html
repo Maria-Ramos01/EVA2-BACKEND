@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Estado de la Compra - Farmacia Salud</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: sans-serif; background: #f8f6f0; margin: 0; }
+        .container { max-width: 800px; margin: 40px auto; background: white; padding: 30px; border-radius: 8px; }
+        .step { display: flex; align-items: center; margin-bottom: 20px; }
+        .step-icon { width: 40px; height: 40px; border-radius: 50%; background: #ddd; display: flex; align-items: center; justify-content: center; margin-right: 15px; }
+        .step.active .step-icon { background: #28a745; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Seguimiento de Solicitud #{{ solicitud.id }}</h2>
+        <hr>
+        <div class="step {% if solicitud.estado != 'PENDIENTE' %}active{% endif %}">
+            <div class="step-icon"><i class="fa-solid fa-check"></i></div>
+            <div>
+                <strong>Solicitud Registrada / Pagada</strong>
+                <p style="margin:0; font-size:0.85rem; color:#666;">Pago procesado correctamente.</p>
+            </div>
+        </div>
+        <div class="step {% if solicitud.estado == 'COMPLETADO' or solicitud.estado == 'DESPACHADO' %}active{% endif %}">
+            <div class="step-icon"><i class="fa-solid fa-boxes-packing"></i></div>
+            <div>
+                <strong>Revisión e Inventario (Gestor de Bodega)</strong>
+                <p style="margin:0; font-size:0.85rem; color:#666;">Preparación de insumos en bodega.</p>
+            </div>
+        </div>
+        <div class="step {% if solicitud.estado == 'DESPACHADO' %}active{% endif %}">
+            <div class="step-icon"><i class="fa-solid fa-truck"></i></div>
+            <div>
+                <strong>Despachado</strong>
+                <p style="margin:0; font-size:0.85rem; color:#666;">En camino a la institución médica.</p>
+            </div>
+        </div>
+        <a href="{% url 'mis_solicitudes' %}" style="display:inline-block; margin-top:20px; color:#007bff;">&larr; Volver a mis solicitudes</a>
+    </div>
+</body>
+</html>

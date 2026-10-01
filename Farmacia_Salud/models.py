@@ -64,19 +64,16 @@ class CarroItem(models.Model):
 
 # 5. Solicitud de Abastecimiento / Orden
 class SolicitudAbastecimiento(models.Model):
-    ESTADOS = (
-        ('PENDIENTE', 'Pendiente'),
-        ('PAGADO', 'Pagado'),
-        ('ENTREGADO', 'Entregado'),
-        ('CANCELADO', 'Cancelado'),
+    # Permite que el usuario sea nulo para compras anónimas
+    usuario = models.ForeignKey(
+        Usuario, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True
     )
-    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='solicitudes')
-    creado_en = models.DateTimeField(auto_now_add=True)
-    estado = models.CharField(max_length=20, choices=ESTADOS, default='PENDIENTE')
-    total = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-
-    def __str__(self):
-        return f"Solicitud #{self.id} - {self.usuario.username} ({self.estado})"
+    estado = models.CharField(max_length=50, default='PENDIENTE')
+    total = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
 
 
 class SolicitudItem(models.Model):

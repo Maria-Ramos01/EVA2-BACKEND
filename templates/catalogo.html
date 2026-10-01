@@ -233,12 +233,17 @@
         <a href="{% url 'catalogo' %}" class="navbar-brand">
             <i class="fa-solid fa-maple-leaf"></i> Farmacia Salud
         </a>
-        <div class="navbar-user">
-            <!-- Botón directo al Carro de Compras / Solicitud B2B -->
-            <a href="/carro/" class="btn-cart">
-                <i class="fa-solid fa-cart-shopping"></i> Mi Carro
-                <span class="cart-badge" id="cartCount">0</span>
-            </a>
+            <div class="navbar-user">
+                    <a href="{% url 'ver_carro' %}" class="btn-cart">
+            <i class="fa-solid fa-cart-shopping"></i> Mi Carro
+            <span class="cart-badge">
+                {% if request.user.is_authenticated %}
+                    {{ request.user.carroinsumos.items.count|default:0 }}
+                {% else %}
+                    {{ request.session.carro|length|default:0 }}
+                {% endif %}
+            </span>
+        </a>
 
             {% if request.user.is_authenticated %}
                 <span>Hola, <strong>{{ request.user.username }}</strong></span>
@@ -273,29 +278,25 @@
 <div class="products-grid">
 
     {% for insumo in insumos %}
-    <div class="product-card" data-category="cat-{{ insumo.categoria.id }}">
-        <div>
-            <h3 class="product-title">{{ insumo.nombre_comercial }}</h3>
-            <div class="product-subtitle">{{ insumo.categoria.nombre }}</div>
-            <div class="product-detail"><strong>Lote:</strong> {{ insumo.lote }}</div>
-            
-            <!-- Precio dinamico obtenido del modelo Insumo -->
-            <div class="product-detail">
-                <strong>Precio / Caja:</strong> ${{ insumo.precio_caja|floatformat:0 }}
-            </div>
-            
-            <div class="product-detail">
-                <strong>Stock Disponible:</strong> <span class="badge-stock">{{ insumo.stock }} unidades</span>
-            </div>
+<div class="product-card" data-category="cat-{{ insumo.categoria.id }}">
+    <div>
+        <h3 class="product-title">{{ insumo.nombre_comercial }}</h3>
+        <div class="product-subtitle">{{ insumo.categoria.nombre }}</div>
+        <div class="product-detail"><strong>Lote:</strong> {{ insumo.lote }}</div>
+        <div class="product-detail">
+            <strong>Precio / Caja:</strong> ${{ insumo.precio_caja|default:0|floatformat:0 }}
         </div>
-        <button class="btn-add-cart" onclick="addToCart('{{ insumo.id }}')">Agregar al Carro</button>
+        <div class="product-detail">
+            <strong>Stock Disponible:</strong> <span class="badge-stock">{{ insumo.stock }} unidades</span>
+        </div>
     </div>
-    {% empty %}
-    <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #666;">
-        <i class="fa-solid fa-box-open fa-2x"></i>
-        <p>No hay insumos registrados en la base de datos.</p>
-    </div>
-    {% endfor %}
+
+    <!-- Enlace/Botón que envía la ID al servidor -->
+    <a href="{% url 'agregar_al_carro' insumo.id %}" class="btn-add-cart" style="text-align: center; text-decoration: none; display: block; box-sizing: border-box;">
+        Agregar al Carro
+    </a>
+</div>
+{% endfor %}
 
 </div>
 

@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Mis Solicitudes de Abastecimiento</h2>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    {% if solicitudes %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle bg-white shadow-sm rounded">
+                <thead class="table-dark">
+                    <tr>
+                        <th># Pedido</th>
+                        <th>Fecha</th>
+                        <th>Total</th>
+                        <th>Estado Actual</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sol in solicitudes %}
+                    <tr>
+                        <td><strong>#{{ sol.id }}</strong></td>
+                        <td>{{ sol.fecha_creacion|date:"d/m/Y H:i" }}</td>
+                        <td>${{ sol.total|floatformat:0 }}</td>
+                        <td>
+                            {% if sol.estado == 'PAID' or sol.estado == 'PAGADO' %}
+                                <span class="badge bg-primary">Pagado / En Proceso</span>
+                            {% elif sol.estado == 'ENTREGADO' %}
+                                <span class="badge bg-success">Entregado</span>
+                            {% elif sol.estado == 'CANCELADO' %}
+                                <span class="badge bg-danger">Cancelado</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ sol.estado }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if sol.estado != 'ENTREGADO' and sol.estado != 'CANCELADO' %}
+                                <!-- Botón Confirmar Entrega -->
+                                <form method="POST" action="{% url 'cambiar_estado_solicitud' sol.id 'ENTREGADO' %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-success">
+                                        <i class="fas fa-check"></i> Confirmar Entrega
+                                    </button>
+                                </form>
+
+                                <!-- Botón Cancelar -->
+                                <form method="POST" action="{% url 'cambiar_estado_solicitud' sol.id 'CANCELADO' %}" class="d-inline" onsubmit="return confirm('¿Seguro que deseas cancelar esta solicitud?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-times"></i> Cancelar
+                                    </button>
+                                </form>
+                            {% else %}
+                                <span class="text-muted small">Sin acciones disponibles</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info text-center">
+            Aún no tienes solicitudes registradas. <a href="{% url 'catalogo' %}">Ir al catálogo de insumos</a>.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

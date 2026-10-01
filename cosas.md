@@ -7,3 +7,6 @@ BD Farmacia_Salud timonlimon01
 
 usuario: juan 
 contraseña: pablo1234
+
+usuario institución: Clinica MR
+contraseña: 123insumos123

@@ -10,12 +10,10 @@
             --bg-body: #f8f6f0;
             --navbar-bg: #271f18;
             --navbar-gold: #e6a100;
-            --card-bg: #ffffff;
             --border-color: #e0e0e0;
-            --primary-blue: #007bff;
-            --badge-green: #28a745;
             --otono-terracota: #c05621;
             --otono-terracota-hover: #9c4214;
+            --badge-blue: #17a2b8;
         }
 
         body {
@@ -43,7 +41,7 @@
         }
 
         .container {
-            max-width: 1000px;
+            max-width: 1100px;
             margin: 30px auto;
             padding: 0 20px;
         }
@@ -55,7 +53,7 @@
             border-radius: 8px;
             overflow: hidden;
             box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
 
         .cart-table th {
@@ -70,13 +68,34 @@
             border-bottom: 1px solid var(--border-color);
         }
 
+        .badge-mayorista {
+            background-color: var(--badge-blue);
+            color: white;
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+
         .checkout-box {
             background-color: #fff;
-            padding: 20px;
+            padding: 25px;
             border-radius: 8px;
             border: 1px solid var(--border-color);
-            max-width: 450px;
+            max-width: 480px;
             margin-left: auto;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .auth-banner {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            border: 1px solid #ffeeba;
         }
 
         .form-group {
@@ -92,26 +111,26 @@
 
         .form-control {
             width: 100%;
-            padding: 8px 12px;
+            padding: 10px;
             border: 1px solid var(--border-color);
             border-radius: 4px;
             box-sizing: border-box;
         }
 
-        .btn-confirm {
+        .btn-pay {
             background-color: var(--otono-terracota);
             color: white;
             border: none;
             padding: 12px;
             width: 100%;
             border-radius: 5px;
-            font-size: 1rem;
+            font-size: 1.1rem;
             font-weight: bold;
             cursor: pointer;
             transition: background 0.2s;
         }
 
-        .btn-confirm:hover {
+        .btn-pay:hover {
             background-color: var(--otono-terracota-hover);
         }
     </style>
@@ -135,6 +154,7 @@
                 <tr>
                     <th>Insumo</th>
                     <th>Cantidad (Cajas)</th>
+                    <th>Tipo de Compra</th>
                     <th>Precio Unitario</th>
                     <th>Subtotal</th>
                 </tr>
@@ -144,13 +164,20 @@
                 <tr>
                     <td><strong>{{ item.insumo.nombre_comercial }}</strong></td>
                     <td>{{ item.cantidad }}</td>
-                    <td>${{ item.insumo.precio_unitario }}</td>
-                    <td>${{ item.subtotal }}</td>
+                    <td>
+                        {% if item.cantidad > 3 %}
+                            <span class="badge-mayorista"><i class="fa-solid fa-boxes-packing"></i> Compra Mayorista</span>
+                        {% else %}
+                            <span style="color: #666; font-size: 0.85rem;">Detalle</span>
+                        {% endif %}
+                    </td>
+                    <td>${{ item.precio_unitario|floatformat:0 }}</td>
+                    <td>${{ item.subtotal|floatformat:0 }}</td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="4" style="text-align: center; padding: 30px; color: #777;">
-                        Tu carro está vacío. <a href="{% url 'catalogo' %}">Explorar productos</a>
+                    <td colspan="5" style="text-align: center; padding: 30px; color: #777;">
+                        Tu carro está vacío. <a href="{% url 'catalogo' %}">Explorar catálogo</a>
                     </td>
                 </tr>
                 {% endfor %}
@@ -159,20 +186,31 @@
 
         {% if items_carro %}
         <div class="checkout-box">
-            <h3>Total: ${{ total }}</h3>
-            <p style="font-size: 0.85rem; color: #666;">Puedes completar tu solicitud sin registrarte:</p>
-            
-            <form method="post" action="#">
+            <h2 style="margin-top:0;">Total: ${{ total|floatformat:0 }}</h2>
+
+            {% if not request.user.is_authenticated %}
+                <div class="auth-banner">
+                    <i class="fa-solid fa-circle-info"></i> Comprando como usuario público. 
+                    <a href="{% url 'login' %}?next={% url 'ver_carro' %}" style="color: #856404; font-weight: bold;">Inicia sesión aquí</a> para asociar este pedido a tu cuenta de Institución Médica.
+                </div>
+            {% endif %}
+
+            <form method="post" action="{% url 'confirmar_pago' %}">
                 {% csrf_token %}
+                {% if not request.user.is_authenticated %}
                 <div class="form-group">
-                    <label>Nombre / Institución Médica</label>
+                    <label>Nombre o Institución Médica</label>
                     <input type="text" name="cliente_nombre" class="form-control" placeholder="Ej: Clínica San José" required>
                 </div>
                 <div class="form-group">
                     <label>Correo Electrónico de Contacto</label>
                     <input type="email" name="cliente_email" class="form-control" placeholder="contacto@clinica.cl" required>
                 </div>
-                <button type="submit" class="btn-confirm">Enviar Solicitud de Abastecimiento</button>
+                {% endif %}
+
+                <button type="submit" class="btn-pay">
+                    <i class="fa-solid fa-credit-card"></i> Pagar
+                </button>
             </form>
         </div>
         {% endif %}
